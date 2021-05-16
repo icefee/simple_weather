@@ -1,0 +1,7 @@
+-keep class com.amap.api.location.**{*;}
+-keep class com.amap.api.fence.**{*;}
+-keep class com.autonavi.aps.amapapi.model.**{*;}
+-keep class com.amap.api.maps2d.**{*;}
+-keep class com.amap.api.mapcore2d.**{*;}
+-keep class mapsdkvi.com.** {*;}
+-keep class io.flutter.plugin.editing.** { *; }
