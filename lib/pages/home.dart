@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../tools/locate.dart';
@@ -100,7 +101,7 @@ class Home extends StatefulWidget {
 
 class HomeState extends State<Home> {
   Map<String, Object> _locationResult;
-  Locate _locate = Locate();
+  Locate _locate;
   StreamSubscription<Map<String, Object>> _listener;
   String _city = '';
   ColorTheme _colorTheme = ColorTheme.light;
@@ -108,24 +109,34 @@ class HomeState extends State<Home> {
   PageController _pageController;
   bool padding = false;
   int page = -1;
-  final Duration pageControllerDuraction = Duration(milliseconds: 400);
+  final Duration pageControllerDuration = Duration(milliseconds: 400);
   final Curve pageControllerCurve = Curves.bounceInOut;
 
   @override
   void initState() {
     super.initState();
 
-    /// 动态申请定位权限
-    requestPermission();
+    _pageController = PageController();
 
-    ///iOS 获取native精度类型
-    if (Platform.isIOS) {
-      _locate.requestAccuracyAuthorization();
+    if (kIsWeb) {
+      return;
     }
 
-    ///注册定位结果监听
-    _listener = _locate.addListener(onLocate);
-    _pageController = PageController();
+    if (Platform.isIOS || Platform.isAndroid) {
+
+      _locate = Locate();
+
+      /// 动态申请定位权限
+      requestPermission();
+
+      ///iOS 获取native精度类型
+      if (Platform.isIOS) {
+        _locate.requestAccuracyAuthorization();
+      }
+
+      ///注册定位结果监听
+      _listener = _locate.addListener(onLocate);
+    }
   }
 
   void onLocate(value) {
@@ -223,13 +234,15 @@ class HomeState extends State<Home> {
   }
 
   void toCity(int page) {
-    _pageController?.animateToPage(page, duration: pageControllerDuraction, curve: pageControllerCurve);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _pageController?.animateToPage(page, duration: pageControllerDuration, curve: pageControllerCurve);
+    });
   }
 
   void removeCity(int index) {
     page = index - 1;
-    _pageController.previousPage(duration: pageControllerDuraction, curve: pageControllerCurve);
-    Future.delayed(pageControllerDuraction, () {
+    _pageController.previousPage(duration: pageControllerDuration, curve: pageControllerCurve);
+    Future.delayed(pageControllerDuration, () {
       cities.removeAt(index);
       setState(() {});
     });
@@ -280,7 +293,7 @@ class HomeState extends State<Home> {
               return SafeArea(
                 child: Stack(
                   children: [
-                    PageView.builder(
+                    cities.length > 0 ? PageView.builder(
                       itemCount: cities.length,
                       controller: _pageController,
                       onPageChanged: (int _) {
@@ -495,6 +508,8 @@ class HomeState extends State<Home> {
                           ],
                         );
                       },
+                    ) : Center(
+                      child: Text('暂无城市, 请先添加', style: Theme.of(context).textTheme.bodyText1),
                     ),
                     Align(
                       alignment: Alignment.topRight,
