@@ -23,7 +23,13 @@ class Weather {
   String update;
   List<Daily> recent;
   Suggestion suggestion;
-  Weather(this.isLocate, this.city, this.code, this.text, this.temperature, this.update, this.recent, this.suggestion);
+  int lastRequest;
+
+  static Map toMap(Weather weather) {
+    return Map();
+  }
+
+  Weather({ this.city, this.isLocate, this.code, this.text, this.temperature, this.update, this.recent, this.suggestion, this.lastRequest });
 }
 
 class Daily {
@@ -143,7 +149,7 @@ class HomeState extends State<Home> {
     if (_locationResult != null && _locationResult['city'] != '') {
       // _province = _locationResult['province'];
       _city = _locationResult['city'];
-      _getNowWeather(true);
+      _addCity(true);
       _locate.stopLocation();
       _listener.cancel();
     }
@@ -156,7 +162,7 @@ class HomeState extends State<Home> {
   }
 
   void showErr(String err) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    ScaffoldMessenger.of(context)..hideCurrentSnackBar()..showSnackBar(
         SnackBar(
           content: Text(err),
           backgroundColor: Colors.red,
@@ -164,45 +170,62 @@ class HomeState extends State<Home> {
     );
   }
 
-  void _getNowWeather(bool isLocate) async {
+  Future<Weather> _requestWeatherData(String _city, { bool isLocate = false }) async {
+    Map nowWeather = await Api.getNowWeather(_city);
+    if (nowWeather == null) {
+      showErr('数据获取失败');
+      return null;
+    }
+    else if (nowWeather['status_code'] == 'AP010014') {
+      showErr(nowWeather['status']);
+      return null;
+    }
+    Map now = nowWeather['results'][0]['now'];
+    Map recentWeather = await Api.getRecentWeather(_city);
+    List<Daily> recent = [];
+    for (final Map item in recentWeather['results'][0]['daily']) {
+      recent.add(
+          Daily.fromMap(item)
+      );
+    }
+    Map lifeSuggestion = await Api.getSuggestion(_city);
+    Map suggestionMap = lifeSuggestion['results'][0]['suggestion'];
+    Suggestion suggestion = Suggestion(
+      SuggestionInfo()..brief = suggestionMap['car_washing']['brief']..details = suggestionMap['car_washing']['details'],
+      SuggestionInfo()..brief = suggestionMap['dressing']['brief']..details = suggestionMap['dressing']['details'],
+      SuggestionInfo()..brief = suggestionMap['flu']['brief']..details = suggestionMap['flu']['details'],
+      SuggestionInfo()..brief = suggestionMap['sport']['brief']..details = suggestionMap['sport']['details'],
+      SuggestionInfo()..brief = suggestionMap['travel']['brief']..details = suggestionMap['travel']['details'],
+      SuggestionInfo()..brief = suggestionMap['travel']['brief']..details = suggestionMap['travel']['details'],
+    );
+    return Weather(
+      isLocate: isLocate,
+      city: _city,
+      code: now['code'],
+      text: now['text'],
+      temperature: now['temperature'],
+      update: nowWeather['results'][0]['last_update'],
+      recent: recent,
+      suggestion: suggestion,
+      lastRequest: DateTime.now().millisecondsSinceEpoch
+    );
+  }
+
+  void _addCity(bool isLocate) async {
     int index = findCity(_city);
     if (index == -1) {
       setState(() {
         padding = true;
       });
-      Map nowWeather = await Api.getNowWeather(_city);
-      if (nowWeather == null) {
-        showErr('数据获取失败');
-        return;
+      Weather weather = await _requestWeatherData(_city, isLocate: isLocate);
+      if (weather != null) {
+        cities.add(weather);
+        padding = false;
+        if (isLocate) {
+          page = 0;
+        }
+        toCity(cities.length - 1);
       }
-      Map now = nowWeather['results'][0]['now'];
-
-      Map recentWeather = await Api.getRecentWeather(_city);
-      List<Daily> recent = [];
-      for (final Map item in recentWeather['results'][0]['daily']) {
-        recent.add(
-          Daily.fromMap(item)
-        );
-      }
-
-      Map lifeSuggestion = await Api.getSuggestion(_city);
-      Map suggestionMap = lifeSuggestion['results'][0]['suggestion'];
-      Suggestion suggestion = Suggestion(
-        SuggestionInfo()..brief = suggestionMap['car_washing']['brief']..details = suggestionMap['car_washing']['details'],
-        SuggestionInfo()..brief = suggestionMap['dressing']['brief']..details = suggestionMap['dressing']['details'],
-        SuggestionInfo()..brief = suggestionMap['flu']['brief']..details = suggestionMap['flu']['details'],
-        SuggestionInfo()..brief = suggestionMap['sport']['brief']..details = suggestionMap['sport']['details'],
-        SuggestionInfo()..brief = suggestionMap['travel']['brief']..details = suggestionMap['travel']['details'],
-        SuggestionInfo()..brief = suggestionMap['travel']['brief']..details = suggestionMap['travel']['details'],
-      );
-      cities.add(
-          Weather(isLocate, _city, now['code'], now['text'], now['temperature'], nowWeather['results'][0]['last_update'], recent, suggestion)
-      );
-      padding = false;
-      if (isLocate) {
-        page = 0;
-      }
-      toCity(cities.length - 1);
     }
     else {
       toCity(index);
@@ -224,7 +247,7 @@ class HomeState extends State<Home> {
       onSetCity: (String _) {
         Navigator.pop(context);
         _city = _;
-        _getNowWeather(false);
+        _addCity(false);
       },
     )));
     // showModalBottomSheet(
@@ -246,6 +269,18 @@ class HomeState extends State<Home> {
       cities.removeAt(index);
       setState(() {});
     });
+  }
+
+  void onPageChanged(int _) async {
+    page = _;
+    _city = cities[_].city;
+    if (DateTime.now().millisecondsSinceEpoch > cities[_].lastRequest + 15 * 60 * 1000) { // 请求数据最小间隔15分钟
+      Weather weather = await _requestWeatherData(_city);
+      if (weather != null) {
+        cities[_] = weather;
+      }
+    }
+    setState(() {});
   }
 
   Widget infoCell(String title, String value, TextTheme textTheme, { double width = 80.0, double height = 60.0 }) {
@@ -296,10 +331,7 @@ class HomeState extends State<Home> {
                     cities.length > 0 ? PageView.builder(
                       itemCount: cities.length,
                       controller: _pageController,
-                      onPageChanged: (int _) {
-                        page = _;
-                        setState(() {});
-                      },
+                      onPageChanged: onPageChanged,
                       itemBuilder: (BuildContext context, int index) {
                         return Stack(
                           alignment: Alignment.center,
