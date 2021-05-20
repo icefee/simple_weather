@@ -151,6 +151,7 @@ class _CityList extends State<CityList> {
                                           activeChar = '';
                                         });
                                       },
+                                      onPanStart: (detail) => onPanUpdate(detail, constraints.maxHeight),
                                     )
                                   ],
                                 ),
