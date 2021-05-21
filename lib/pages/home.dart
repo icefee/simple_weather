@@ -263,8 +263,10 @@ class HomeState extends State<Home> {
   }
 
   void removeCity(int index) {
-    page = index - 1;
-    _pageController.previousPage(duration: pageControllerDuration, curve: pageControllerCurve);
+    if (index > 0) {
+      page = index - 1;
+      _pageController.previousPage(duration: pageControllerDuration, curve: pageControllerCurve);
+    }
     Future.delayed(pageControllerDuration, () {
       cities.removeAt(index);
       setState(() {});
@@ -277,6 +279,7 @@ class HomeState extends State<Home> {
     if (DateTime.now().millisecondsSinceEpoch > cities[_].lastRequest + 15 * 60 * 1000) { // 请求数据最小间隔15分钟
       Weather weather = await _requestWeatherData(_city);
       if (weather != null) {
+        weather.isLocate = cities[_].isLocate;
         cities[_] = weather;
       }
     }
