@@ -4,5 +4,5 @@
 
 # 特征
 
-## 多平台支持, 可以运行在Android, ios, Web, Windows, MacOs, Linux.
-## 支持全国上百个城市的添加
+1. 多平台支持, 可以运行在Android, ios, Web, Windows, MacOs, Linux.
+2. 支持全国上百个城市的添加
