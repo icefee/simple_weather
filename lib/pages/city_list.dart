@@ -99,6 +99,11 @@ class _CityList extends State<CityList> {
               child: Builder(
                 builder: (context) {
                   List<dynamic> __cities = filtered(_citys);
+                  if (__cities.isEmpty) {
+                    return Center(
+                      child: Text('暂无满足条件的城市.'),
+                    );
+                  }
                   return Stack(
                     children: [
                       Scrollbar(
@@ -128,39 +133,42 @@ class _CityList extends State<CityList> {
                             }
                         ),
                       ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Container(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              if (__cities.length == 0) {
-                                return Container();
-                              }
-                              return FittedBox(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    for (final Map city in __cities) GestureDetector(
-                                      child: Container(
-                                        child: Text(city['title']),
-                                        // color: city['title'] == activeChar ? Theme.of(context).primaryColor : null,
-                                      ),
-                                      onPanUpdate: (detail) => onPanUpdate(detail, constraints.maxHeight),
-                                      onPanEnd: (detail) {
-                                        setState(() {
-                                          activeChar = '';
-                                        });
-                                      },
-                                      onPanStart: (detail) => onPanUpdate(detail, constraints.maxHeight),
-                                    )
-                                  ],
-                                ),
-                              );
-                            },
+                      Offstage(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
+                            child: LayoutBuilder(
+                              builder: (context, constraints) {
+                                if (__cities.isEmpty) {
+                                  return Container();
+                                }
+                                return FittedBox(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      for (final Map city in __cities) GestureDetector(
+                                        child: Container(
+                                          child: Text(city['title']),
+                                          // color: city['title'] == activeChar ? Theme.of(context).primaryColor : null,
+                                        ),
+                                        onPanUpdate: (detail) => onPanUpdate(detail, constraints.maxHeight),
+                                        onPanEnd: (detail) {
+                                          setState(() {
+                                            activeChar = '';
+                                          });
+                                        },
+                                        onPanStart: (detail) => onPanUpdate(detail, constraints.maxHeight),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            width: 40.0,
+                            color: Colors.grey[100],
                           ),
-                          width: 40.0,
-                          color: Colors.grey[100],
                         ),
+                        offstage: _keyword.isEmpty,
                       ),
                       Align(
                         alignment: Alignment.center,
