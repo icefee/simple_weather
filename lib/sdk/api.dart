@@ -32,5 +32,14 @@ class Api {
     return completer.future;
   }
 
+  static Future<Map> getLocationByNetwork() {
+    Completer completer = Completer<Map>();
+    String uri = 'https://apis.map.qq.com/ws/location/v1/ip?key=3BFBZ-ZKD3X-LW54A-ZT76D-E7AHO-4RBD5&&output=json';
+    getJson(uri, (Map value) {
+      completer.complete(value);
+    });
+    return completer.future;
+  }
+
 }
 

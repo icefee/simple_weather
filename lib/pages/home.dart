@@ -143,6 +143,17 @@ class HomeState extends State<Home> {
       ///注册定位结果监听
       _listener = _locate.addListener(onLocate);
     }
+    else {
+      _locateByNetwork();
+    }
+  }
+
+  void _locateByNetwork() async {
+    Map result = await Api.getLocationByNetwork();
+    if (result['status'] == 0) {
+      _city = result['result']['ad_info']['city'];
+      _addCity(true);
+    }
   }
 
   void onLocate(value) {
