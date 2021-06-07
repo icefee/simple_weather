@@ -157,9 +157,10 @@ class HomeState extends State<Home> {
   }
 
   void onLocate(value) {
-    if (_locationResult != null && _locationResult['city'] != '') {
+    print(value);
+    if (value != null && value['city'] != '') {
       // _province = _locationResult['province'];
-      _city = _locationResult['city'];
+      _city = value['city'];
       _addCity(true);
       _locate.stopLocation();
       _listener.cancel();
