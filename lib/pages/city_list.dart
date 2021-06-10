@@ -148,7 +148,7 @@ class _CityList extends State<CityList> {
                                     children: [
                                       for (final Map city in __cities) GestureDetector(
                                         child: Container(
-                                          child: Text(city['title']),
+                                          child: Text(city['title'], style: TextStyle(color: Colors.black45)),
                                           // color: city['title'] == activeChar ? Theme.of(context).primaryColor : null,
                                         ),
                                         onPanUpdate: (detail) => onPanUpdate(detail, constraints.maxHeight),
@@ -168,7 +168,7 @@ class _CityList extends State<CityList> {
                             color: Colors.grey[100],
                           ),
                         ),
-                        offstage: _keyword.isEmpty,
+                        offstage: _keyword.isNotEmpty,
                       ),
                       Align(
                         alignment: Alignment.center,
