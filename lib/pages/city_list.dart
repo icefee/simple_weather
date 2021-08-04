@@ -174,11 +174,16 @@ class _CityList extends State<CityList> {
                         alignment: Alignment.center,
                         child: Offstage(
                           child: Container(
-                            color: Colors.black87,
-                            width: 80.0,
-                            height: 80.0,
+                            width: 60.0,
+                            height: 60.0,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                width: 2.0,
+                                color: Colors.indigo
+                              )
+                            ),
                             child: Center(
-                              child: Text(activeChar, style: TextStyle(fontSize: 50.0, color: Colors.white)),
+                              child: Text(activeChar, style: TextStyle(fontSize: 40.0, color: Colors.indigo)),
                             ),
                           ),
                           offstage: activeChar == '',
