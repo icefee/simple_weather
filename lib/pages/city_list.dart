@@ -47,7 +47,7 @@ class _CityList extends State<CityList> {
 
   void onPanUpdate(detail, height) {
     double ratio = (detail.globalPosition.dy - (MediaQuery.of(context).size.height - height)) / height;
-    int charIndex = (_citys.length * ratio).round();
+    int charIndex = (_citys.length * ratio).ceil();
     if (charIndex > _citys.length - 1 || charIndex < 0) {
       activeChar = '';
     }
@@ -115,8 +115,11 @@ class _CityList extends State<CityList> {
                             var _cityList = __cities[index]['lists'];
                             return Column(
                               children: [
-                                ListTile(
-                                  title: Text(_title),
+                                Container(
+                                  child: ListTile(
+                                    title: Text(_title),
+                                  ),
+                                  color: Colors.grey[300],
                                 ),
                                 Column(
                                   children: List<Widget>.generate((_cityList as List).length, (index) => TextButton(
@@ -133,42 +136,51 @@ class _CityList extends State<CityList> {
                             }
                         ),
                       ),
-                      Offstage(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                if (__cities.isEmpty) {
-                                  return Container();
-                                }
-                                return FittedBox(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      for (final Map city in __cities) GestureDetector(
-                                        child: Container(
-                                          child: Text(city['title'], style: TextStyle(color: Colors.black45)),
-                                          // color: city['title'] == activeChar ? Theme.of(context).primaryColor : null,
-                                        ),
-                                        onPanUpdate: (detail) => onPanUpdate(detail, constraints.maxHeight),
-                                        onPanEnd: (detail) {
-                                          setState(() {
-                                            activeChar = '';
-                                          });
-                                        },
-                                        onPanStart: (detail) => onPanUpdate(detail, constraints.maxHeight),
-                                      )
-                                    ],
-                                  ),
-                                );
-                              },
+                      LayoutBuilder(
+                        builder: (BuildContext context, BoxConstraints constraints) {
+                          double _height = constraints.maxHeight;
+                          if (_height > 480.0) {
+                            _height = 480.0;
+                          }
+                          return Offstage(
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Container(
+                                child: LayoutBuilder(
+                                  builder: (BuildContext context, BoxConstraints constraints) {
+                                    if (__cities.isEmpty) {
+                                      return Container();
+                                    }
+                                    return FittedBox(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          for (final Map city in __cities) GestureDetector(
+                                            child: Container(
+                                              child: Text(city['title'], style: TextStyle(color: Colors.black45)),
+                                              // color: city['title'] == activeChar ? Theme.of(context).primaryColor : null,
+                                            ),
+                                            onPanUpdate: (DragUpdateDetails detail) => onPanUpdate(detail, constraints.maxHeight),
+                                            onPanEnd: (DragEndDetails detail) {
+                                              setState(() {
+                                                activeChar = '';
+                                              });
+                                            },
+                                            onPanStart: (DragStartDetails detail) => onPanUpdate(detail, constraints.maxHeight),
+                                          )
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                width: 25.0,
+                                height: _height,
+                                margin: EdgeInsets.only(right: 5.0),
+                              ),
                             ),
-                            width: 40.0,
-                            color: Colors.grey[100],
-                          ),
-                        ),
-                        offstage: _keyword.isNotEmpty,
+                            offstage: _keyword.isNotEmpty,
+                          );
+                        }
                       ),
                       Align(
                         alignment: Alignment.center,

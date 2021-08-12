@@ -187,7 +187,7 @@ class HomeState extends State<Home> {
       showErr('数据获取失败');
       return null;
     }
-    else if (nowWeather['status_code'] == 'AP010014') {
+    else if (nowWeather['status_code'] == 'AP010014' || nowWeather['results'] == null) {
       showErr(nowWeather['status']);
       return null;
     }
@@ -231,12 +231,12 @@ class HomeState extends State<Home> {
       Weather weather = await _requestWeatherData(_city, isLocate: isLocate);
       if (weather != null) {
         cities.add(weather);
-        padding = false;
         if (isLocate) {
           page = 0;
         }
         toCity(cities.length - 1);
       }
+      padding = false;
     }
     else {
       toCity(index);
